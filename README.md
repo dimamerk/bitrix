@@ -28,7 +28,7 @@ lib/
 
 1. Откройте ваш портал Bitrix24
 2. Перейдите в **Разработчикам → Другое → Локальное приложение**
-3. Укажите **URL обработчика**: `http://localhost:3000/api/auth/callback/bitrix24`
+3. Укажите **URL обработчика**: `http://localhost:3001/api/auth/callback/bitrix24`
 4. Запишите **client_id** и **client_secret**
 
 ### 2. Переменные окружения
@@ -56,7 +56,7 @@ npx @better-auth/cli migrate
 npm run dev
 ```
 
-Откройте http://localhost:3000
+Откройте http://localhost:3001
 
 ## Маршруты
 
