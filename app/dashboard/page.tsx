@@ -56,10 +56,10 @@ export default async function DashboardPage() {
               </thead>
               <tbody>
                 {bitrixGroups.map((group: Record<string, unknown>) => (
-                  <tr key={String(group.ID)} className="border-b last:border-0">
-                    <td className="py-2 pr-4 font-mono text-gray-500">{String(group.ID)}</td>
-                    <td className="py-2 pr-4">{String(group.NAME || "")}</td>
-                    <td className="py-2 text-gray-500">{String(group.DESCRIPTION || "—")}</td>
+                  <tr key={String(group.GROUP_ID)} className="border-b last:border-0">
+                    <td className="py-2 pr-4 font-mono text-gray-500">{String(group.GROUP_ID)}</td>
+                    <td className="py-2 pr-4">{String(group.GROUP_NAME || "")}</td>
+                    <td className="py-2 text-gray-500">{String(group.ROLE || "—")}</td>
                   </tr>
                 ))}
               </tbody>

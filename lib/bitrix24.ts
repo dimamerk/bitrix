@@ -30,7 +30,7 @@ export async function getBitrix24Groups(userId: string) {
   if (!token) return null;
 
   const response = await fetch(
-    `${BITRIX24_DOMAIN}/rest/sonet_group.get.json?auth=${token}`
+    `${BITRIX24_DOMAIN}/rest/sonet_group.user.groups.json?auth=${token}`
   );
 
   if (!response.ok) return null;
