@@ -4,13 +4,17 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
+  console.log("[dashboard] loading session");
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (!session) {
+    console.log("[dashboard] no session, redirecting to /login");
     redirect("/login");
   }
+
+  console.log("[dashboard] session OK, userId:", session.user.id, "email:", session.user.email);
 
   const [bitrixUser, bitrixGroups] = await Promise.all([
     getBitrix24User(session.user.id),

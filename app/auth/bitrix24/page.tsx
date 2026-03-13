@@ -17,14 +17,18 @@ export default function Bitrix24AutoLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("[auth/bitrix24] starting auto-login OAuth flow");
     authClient.signIn
       .oauth2({
         providerId: "bitrix24",
         callbackURL: "/dashboard",
         errorCallbackURL: "/login?error=auth_failed",
       })
+      .then((result) => {
+        console.log("[auth/bitrix24] signIn.oauth2 resolved:", result);
+      })
       .catch((err) => {
-        console.error("Bitrix24 OAuth error:", err);
+        console.error("[auth/bitrix24] OAuth error:", err);
         setError("Failed to start authentication. Please try again.");
       });
   }, []);

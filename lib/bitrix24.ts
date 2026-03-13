@@ -12,29 +12,47 @@ function getAccessToken(userId: string): string | null {
 }
 
 export async function getBitrix24User(userId: string) {
+  console.log("[bitrix24] getBitrix24User called, userId:", userId);
   const token = getAccessToken(userId);
-  if (!token) return null;
+  if (!token) {
+    console.warn("[bitrix24] no access token found for userId:", userId);
+    return null;
+  }
 
   const response = await fetch(
     `${BITRIX24_DOMAIN}/rest/user.current.json?auth=${token}`
   );
+  console.log("[bitrix24] user.current status:", response.status);
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error("[bitrix24] getBitrix24User failed:", response.status, response.statusText);
+    return null;
+  }
 
   const data = await response.json();
+  console.log("[bitrix24] getBitrix24User success, ID:", data.result?.ID);
   return data.result;
 }
 
 export async function getBitrix24Groups(userId: string) {
+  console.log("[bitrix24] getBitrix24Groups called, userId:", userId);
   const token = getAccessToken(userId);
-  if (!token) return null;
+  if (!token) {
+    console.warn("[bitrix24] no access token found for userId:", userId);
+    return null;
+  }
 
   const response = await fetch(
     `${BITRIX24_DOMAIN}/rest/sonet_group.user.groups.json?auth=${token}`
   );
+  console.log("[bitrix24] sonet_group.user.groups status:", response.status);
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    console.error("[bitrix24] getBitrix24Groups failed:", response.status, response.statusText);
+    return null;
+  }
 
   const data = await response.json();
+  console.log("[bitrix24] getBitrix24Groups success, count:", Array.isArray(data.result) ? data.result.length : "non-array");
   return data.result;
 }

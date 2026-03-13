@@ -23,11 +23,16 @@ export const auth = betterAuth({
           authentication: "post",
 
           getUserInfo: async (tokens) => {
+            console.log("[auth] getUserInfo called, accessToken present:", !!tokens.accessToken);
             const response = await fetch(
               `${BITRIX24_DOMAIN}/rest/user.current.json?auth=${tokens.accessToken}`
             );
 
+            console.log("[auth] user.current response status:", response.status, response.statusText);
+
             if (!response.ok) {
+              const body = await response.text().catch(() => "(unreadable)");
+              console.error("[auth] getUserInfo failed, body:", body);
               throw new Error(
                 `Failed to fetch Bitrix24 user info: ${response.statusText}`
               );
@@ -35,6 +40,7 @@ export const auth = betterAuth({
 
             const data = await response.json();
             const user = data.result;
+            console.log("[auth] getUserInfo success, user ID:", user?.ID, "email:", user?.EMAIL);
 
             return {
               id: String(user.ID),

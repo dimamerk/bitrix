@@ -8,11 +8,17 @@ export default function LoginPage() {
   const error = searchParams.get("error");
 
   const handleBitrix24Login = async () => {
-    await authClient.signIn.oauth2({
-      providerId: "bitrix24",
-      callbackURL: "/dashboard",
-      errorCallbackURL: "/login?error=auth_failed",
-    });
+    console.log("[login] starting Bitrix24 OAuth flow");
+    try {
+      const result = await authClient.signIn.oauth2({
+        providerId: "bitrix24",
+        callbackURL: "/dashboard",
+        errorCallbackURL: "/login?error=auth_failed",
+      });
+      console.log("[login] signIn.oauth2 resolved:", result);
+    } catch (err) {
+      console.error("[login] OAuth error:", err);
+    }
   };
 
   return (
