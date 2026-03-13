@@ -40,34 +40,27 @@ export const auth = betterAuth({
               `${BITRIX24_DOMAIN}/rest`;
 
             const userId = raw?.user_id;
-            console.log("[auth] using restEndpoint:", restEndpoint, "userId from token:", userId);
 
-            // Диагностика: проверяем доступность REST API через app.info
-            const appInfoRes = await fetch(`${restEndpoint}/app.info.json?auth=${tokens.accessToken}`);
-            const appInfoBody = await appInfoRes.text();
-            console.log("[auth] app.info status:", appInfoRes.status, "body:", appInfoBody);
+            // server_endpoint — для серверных вызовов (Next.js backend → Bitrix24)
+            // client_endpoint — для вызовов из браузера (user-context)
+            // domain: "oauth.bitrix24.tech" означает токен выдан центральным сервером
+            const serverEndpoint = raw?.server_endpoint?.replace(/\/$/, "") ?? restEndpoint;
+            console.log("[auth] restEndpoint (client):", restEndpoint);
+            console.log("[auth] serverEndpoint:", serverEndpoint);
+            console.log("[auth] userId from token:", userId);
 
-            // Пробуем profile — специальный эндпоинт для OAuth-токенов в Bitrix24
-            const profileRes = await fetch(`${restEndpoint}/profile.json?auth=${tokens.accessToken}`);
-            const profileBody = await profileRes.text();
-            console.log("[auth] profile status:", profileRes.status, "body:", profileBody);
+            // Пробуем server_endpoint (oauth.bitrix24.tech/rest/)
+            const serverAppInfo = await fetch(`${serverEndpoint}/app.info.json?auth=${tokens.accessToken}`);
+            const serverAppInfoBody = await serverAppInfo.text();
+            console.log("[auth] server_endpoint/app.info status:", serverAppInfo.status, "body:", serverAppInfoBody);
 
-            // Пробуем user.get с filter
-            const userGetRes = await fetch(
-              `${restEndpoint}/user.get.json?auth=${tokens.accessToken}&filter[ID]=${userId}`
+            const serverUserGet = await fetch(
+              `${serverEndpoint}/user.get.json?auth=${tokens.accessToken}&ID=${userId}`
             );
-            const userGetBody = await userGetRes.text();
-            console.log("[auth] user.get (filter) status:", userGetRes.status, "body:", userGetBody);
+            const serverUserGetBody = await serverUserGet.text();
+            console.log("[auth] server_endpoint/user.get status:", serverUserGet.status, "body:", serverUserGetBody);
 
-            // Пробуем Authorization header вместо query param
-            const userGetHeaderRes = await fetch(
-              `${restEndpoint}/user.get.json?filter[ID]=${userId}`,
-              { headers: { Authorization: `Bearer ${tokens.accessToken}` } }
-            );
-            const userGetHeaderBody = await userGetHeaderRes.text();
-            console.log("[auth] user.get (header) status:", userGetHeaderRes.status, "body:", userGetHeaderBody);
-
-            throw new Error("Diagnostic run — check logs above to see which endpoints work");
+            throw new Error("Diagnostic: check server_endpoint results above");
           },
         },
       ],
