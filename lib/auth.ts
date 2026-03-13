@@ -32,16 +32,17 @@ export const auth = betterAuth({
               raw: tokens.raw ? JSON.stringify(tokens.raw) : "(no raw field)",
             });
 
-            // Bitrix24 возвращает client_endpoint в raw-ответе токена — нужно использовать его,
-            // а не статический BITRIX24_DOMAIN, иначе получим "invalid_token"
-            const clientEndpoint: string =
-              (tokens.raw as Record<string, string> | undefined)?.client_endpoint?.replace(/\/$/, "") ??
-              BITRIX24_DOMAIN;
+            // client_endpoint из токена уже содержит /rest/ (напр. https://domain/rest/)
+            // используем его напрямую, не добавляя /rest/ повторно
+            const raw = tokens.raw as Record<string, string> | undefined;
+            const restEndpoint: string =
+              raw?.client_endpoint?.replace(/\/$/, "") ??
+              `${BITRIX24_DOMAIN}/rest`;
 
-            console.log("[auth] using endpoint:", clientEndpoint);
+            console.log("[auth] using restEndpoint:", restEndpoint);
 
             const response = await fetch(
-              `${clientEndpoint}/rest/user.current.json?auth=${tokens.accessToken}`
+              `${restEndpoint}/user.current.json?auth=${tokens.accessToken}`
             );
 
             console.log("[auth] user.current response status:", response.status, response.statusText);
