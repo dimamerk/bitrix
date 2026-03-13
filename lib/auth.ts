@@ -39,41 +39,35 @@ export const auth = betterAuth({
               raw?.client_endpoint?.replace(/\/$/, "") ??
               `${BITRIX24_DOMAIN}/rest`;
 
-            // user.current требует HTTP-сессию пользователя и не работает с OAuth-токеном.
-            // Используем user.get с user_id из токена — он всегда доступен через OAuth.
             const userId = raw?.user_id;
             console.log("[auth] using restEndpoint:", restEndpoint, "userId from token:", userId);
 
-            if (!userId) {
-              throw new Error("No user_id in token response");
-            }
+            // Диагностика: проверяем доступность REST API через app.info
+            const appInfoRes = await fetch(`${restEndpoint}/app.info.json?auth=${tokens.accessToken}`);
+            const appInfoBody = await appInfoRes.text();
+            console.log("[auth] app.info status:", appInfoRes.status, "body:", appInfoBody);
 
-            const response = await fetch(
-              `${restEndpoint}/user.get.json?auth=${tokens.accessToken}&ID=${userId}`
+            // Пробуем profile — специальный эндпоинт для OAuth-токенов в Bitrix24
+            const profileRes = await fetch(`${restEndpoint}/profile.json?auth=${tokens.accessToken}`);
+            const profileBody = await profileRes.text();
+            console.log("[auth] profile status:", profileRes.status, "body:", profileBody);
+
+            // Пробуем user.get с filter
+            const userGetRes = await fetch(
+              `${restEndpoint}/user.get.json?auth=${tokens.accessToken}&filter[ID]=${userId}`
             );
+            const userGetBody = await userGetRes.text();
+            console.log("[auth] user.get (filter) status:", userGetRes.status, "body:", userGetBody);
 
-            console.log("[auth] user.get response status:", response.status, response.statusText);
+            // Пробуем Authorization header вместо query param
+            const userGetHeaderRes = await fetch(
+              `${restEndpoint}/user.get.json?filter[ID]=${userId}`,
+              { headers: { Authorization: `Bearer ${tokens.accessToken}` } }
+            );
+            const userGetHeaderBody = await userGetHeaderRes.text();
+            console.log("[auth] user.get (header) status:", userGetHeaderRes.status, "body:", userGetHeaderBody);
 
-            if (!response.ok) {
-              const body = await response.text().catch(() => "(unreadable)");
-              console.error("[auth] getUserInfo failed, body:", body);
-              throw new Error(
-                `Failed to fetch Bitrix24 user info: ${response.statusText}`
-              );
-            }
-
-            const data = await response.json();
-            const user = Array.isArray(data.result) ? data.result[0] : data.result;
-            console.log("[auth] getUserInfo success, user ID:", user?.ID, "email:", user?.EMAIL);
-            console.log("[auth] getUserInfo success, user ID:", user?.ID, "email:", user?.EMAIL);
-
-            return {
-              id: String(user.ID),
-              email: user.EMAIL,
-              name: [user.NAME, user.LAST_NAME].filter(Boolean).join(" "),
-              image: user.PERSONAL_PHOTO || null,
-              emailVerified: true,
-            };
+            throw new Error("Diagnostic run — check logs above to see which endpoints work");
           },
         },
       ],
