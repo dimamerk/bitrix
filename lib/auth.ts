@@ -16,7 +16,8 @@ export const auth = betterAuth({
           clientSecret: process.env.BITRIX24_CLIENT_SECRET!,
 
           authorizationUrl: `${BITRIX24_DOMAIN}/oauth/authorize/`,
-          tokenUrl: `${BITRIX24_DOMAIN}/oauth/token/`,
+          // Для on-premise Bitrix24 токены выдаёт oauth.bitrix24.tech, а не локальный сервер
+          tokenUrl: process.env.BITRIX24_TOKEN_URL ?? "https://oauth.bitrix24.tech/oauth/token/",
 
           scopes: ["user"],
 
