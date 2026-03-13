@@ -70,7 +70,7 @@ export const auth = betterAuth({
             let userImage: string | undefined = undefined;
 
             const portalRes = await fetch(
-              `${restEndpoint}/user.current.json?auth=${tokens.accessToken} `
+              `${restEndpoint}/user.current?auth=${tokens.accessToken}`
             );
             console.log("[auth] portal user.current status:", portalRes.status);
 
