@@ -49,18 +49,30 @@ export const auth = betterAuth({
             console.log("[auth] serverEndpoint:", serverEndpoint);
             console.log("[auth] userId from token:", userId);
 
-            // Пробуем server_endpoint (oauth.bitrix24.tech/rest/)
-            const serverAppInfo = await fetch(`${serverEndpoint}/app.info.json?auth=${tokens.accessToken}`);
-            const serverAppInfoBody = await serverAppInfo.text();
-            console.log("[auth] server_endpoint/app.info status:", serverAppInfo.status, "body:", serverAppInfoBody);
+            const memberId = raw?.member_id;
+            console.log("[auth] memberId:", memberId);
 
-            const serverUserGet = await fetch(
-              `${serverEndpoint}/user.get.json?auth=${tokens.accessToken}&ID=${userId}`
+            // app.info через server_endpoint работает — токен валиден
+            // user.get через server_endpoint возвращает 404 — метод недоступен там напрямую
+            //
+            // Для marketplace-приложений Bitrix24 поддерживает прокси:
+            //   oauth.bitrix24.tech/rest/{member_id}/{method} → форвард на локальный портал
+            const proxyEndpoint = `${serverEndpoint}/${memberId}`;
+            console.log("[auth] proxyEndpoint:", proxyEndpoint);
+
+            const proxyUserGet = await fetch(
+              `${proxyEndpoint}/user.get.json?auth=${tokens.accessToken}&ID=${userId}`
             );
-            const serverUserGetBody = await serverUserGet.text();
-            console.log("[auth] server_endpoint/user.get status:", serverUserGet.status, "body:", serverUserGetBody);
+            const proxyUserGetBody = await proxyUserGet.text();
+            console.log("[auth] proxy/user.get status:", proxyUserGet.status, "body:", proxyUserGetBody.slice(0, 500));
 
-            throw new Error("Diagnostic: check server_endpoint results above");
+            const proxyProfile = await fetch(
+              `${proxyEndpoint}/profile.json?auth=${tokens.accessToken}`
+            );
+            const proxyProfileBody = await proxyProfile.text();
+            console.log("[auth] proxy/profile status:", proxyProfile.status, "body:", proxyProfileBody.slice(0, 500));
+
+            throw new Error("Diagnostic: check proxy results above");
           },
         },
       ],
