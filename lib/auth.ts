@@ -39,13 +39,20 @@ export const auth = betterAuth({
               raw?.client_endpoint?.replace(/\/$/, "") ??
               `${BITRIX24_DOMAIN}/rest`;
 
-            console.log("[auth] using restEndpoint:", restEndpoint);
+            // user.current требует HTTP-сессию пользователя и не работает с OAuth-токеном.
+            // Используем user.get с user_id из токена — он всегда доступен через OAuth.
+            const userId = raw?.user_id;
+            console.log("[auth] using restEndpoint:", restEndpoint, "userId from token:", userId);
+
+            if (!userId) {
+              throw new Error("No user_id in token response");
+            }
 
             const response = await fetch(
-              `${restEndpoint}/user.current.json?auth=${tokens.accessToken}`
+              `${restEndpoint}/user.get.json?auth=${tokens.accessToken}&ID=${userId}`
             );
 
-            console.log("[auth] user.current response status:", response.status, response.statusText);
+            console.log("[auth] user.get response status:", response.status, response.statusText);
 
             if (!response.ok) {
               const body = await response.text().catch(() => "(unreadable)");
@@ -56,7 +63,8 @@ export const auth = betterAuth({
             }
 
             const data = await response.json();
-            const user = data.result;
+            const user = Array.isArray(data.result) ? data.result[0] : data.result;
+            console.log("[auth] getUserInfo success, user ID:", user?.ID, "email:", user?.EMAIL);
             console.log("[auth] getUserInfo success, user ID:", user?.ID, "email:", user?.EMAIL);
 
             return {
