@@ -23,9 +23,24 @@ export const auth = betterAuth({
           authentication: "post",
 
           getUserInfo: async (tokens) => {
-            console.log("[auth] getUserInfo called, accessToken present:", !!tokens.accessToken);
+            console.log("[auth] getUserInfo tokens:", {
+              accessToken: tokens.accessToken ? tokens.accessToken.slice(0, 20) + "..." : null,
+              refreshToken: tokens.refreshToken ? tokens.refreshToken.slice(0, 10) + "..." : null,
+              tokenType: tokens.tokenType,
+              idToken: tokens.idToken ? tokens.idToken.slice(0, 10) + "..." : null,
+              raw: tokens.raw ? JSON.stringify(tokens.raw) : "(no raw field)",
+            });
+
+            // Bitrix24 возвращает client_endpoint в raw-ответе токена — нужно использовать его,
+            // а не статический BITRIX24_DOMAIN, иначе получим "invalid_token"
+            const clientEndpoint: string =
+              (tokens.raw as Record<string, string> | undefined)?.client_endpoint?.replace(/\/$/, "") ??
+              BITRIX24_DOMAIN;
+
+            console.log("[auth] using endpoint:", clientEndpoint);
+
             const response = await fetch(
-              `${BITRIX24_DOMAIN}/rest/user.current.json?auth=${tokens.accessToken}`
+              `${clientEndpoint}/rest/user.current.json?auth=${tokens.accessToken}`
             );
 
             console.log("[auth] user.current response status:", response.status, response.statusText);
